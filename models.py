@@ -31,7 +31,6 @@ class BiLSTMCRFSequenceTagger(Model):
             'hidden_size': hidden_size,
             'num_layers': num_layers,
             'dropout': dropout,
-            'batch_first': True,
             'bidirectional': True,
         }))
         self.num_tags = vocab.get_vocab_size(tag_namespace)
@@ -57,10 +56,10 @@ class BiLSTMCRFSequenceTagger(Model):
         output : Dict[str, Variable]
             Output dictionary with keys ``logits``, ``mask``, and ``loss``.
         """
-        embedded = self.text_field_embedder(sentence)  # (bsize, n_tokens, emb_dim)
-        encoded = self.seq2seq_encoder(embedded)  # (bsize, n_tokens, out_dim)
-        logits = self.tags_projection_layer(encoded)  # (bsize, n_tokens, n_tags)
         mask = get_text_field_mask(sentence)
+        embedded = self.text_field_embedder(sentence)  # (bsize, n_tokens, emb_dim)
+        encoded = self.seq2seq_encoder(embedded, mask)  # (bsize, n_tokens, out_dim)
+        logits = self.tags_projection_layer(encoded)  # (bsize, n_tokens, n_tags)
         output = {'logits': logits, 'mask': mask}
         if tags is not None:
             llh = self.crf.forward(logits, tags, mask=mask)
@@ -101,8 +100,14 @@ class BiLSTMCRFSequenceTagger(Model):
         num_layers = params.pop('num_layers', 2)
         dropout = params.pop('dropout', 0.5)
         tag_namespace = params.pop('tag_namespace', 'tags')
-        initializer = Initializer.from_params(params.pop('initializer', Params({})))
-        metric = Metric.from_params(params.pop('metric', Params({})), vocab=vocab)
+        initializer = None
+        initializer_params = params.pop('initializer', None)
+        if initializer_params is not None:
+            initializer = Initializer.from_params(initializer_params)
+        metric = None
+        metric_params = params.pop('metric', None)
+        if metric_params is not None:
+            metric = Metric.from_params(metric_params)
         params.assert_empty(cls.__name__)
         return cls(vocab, text_field_embedder, hidden_size=hidden_size, num_layers=num_layers,
                    dropout=dropout, tag_namespace=tag_namespace, initializer=initializer,
