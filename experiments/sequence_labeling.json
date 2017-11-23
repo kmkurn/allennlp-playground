@@ -1,0 +1,65 @@
+{
+  "dataset_reader": {
+    "type": "conll_two_columns",
+    "token_indexers": {
+      "words": {
+        "type": "single_id",
+        "namespace": "tokens",
+        "lowercase_tokens": true
+      },
+      "chars": {
+        "type": "characters",
+        "namespace": "token_characters"
+      }
+    },
+    "tag_namespace": "tags",
+    "sentence_field_name": "sentence"
+  },
+  "train_data_path": "data/input/jemma/train.conll",
+  "validation_data_path": "data/input/jemma/dev.conll",
+  "test_data_path": "data/input/jemma/test.conll",
+  "model": {
+    "type": "bilstm_crf_seq_tagger",
+    "text_field_embedder": {
+      "type": "basic",
+      "words": {
+        "type": "embedding",
+        "vocab_namespace": "tokens",
+        "embedding_dim": 10
+      },
+      "chars": {
+        "type": "character_encoding",
+        "embedding": {
+          "vocab_namespace": "token_characters",
+          "embedding_dim": 10
+        },
+        "encoder": {
+          "type": "cnn",
+          "embedding_dim": 10,
+          "num_filters": 10,
+          "conv_layer_activation": "relu",
+          "ngram_filter_sizes": [2, 3]
+        },
+        "dropout": 0.1
+      }
+    },
+    "hidden_size": 20,
+    "num_layers": 1,
+    "dropout": 0.1,
+    "tag_namespace": "tags"
+  },
+  "iterator": {
+    "type": "bucket",
+    "sorting_keys": [["sentence", "num_tokens"], ["sentence", "num_token_characters"]],
+    "batch_size": 16
+  },
+  "trainer": {
+    "patience": 2,
+    "validation_metric": "-loss",
+    "num_epochs": 10,
+    "grad_clipping": 5.0,
+    "optimizer": "adam",
+    "no_tqdm": true
+  },
+  "evaluate_on_test": true
+}
