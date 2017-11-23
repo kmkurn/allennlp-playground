@@ -8,7 +8,7 @@ from allennlp.training.metrics import Metric, SpanBasedF1Measure
 from torch.nn import Linear
 
 
-@Model.register('bilstm_seq_tagger')
+@Model.register('bilstm_crf_seq_tagger')
 class BiLSTMCRFSequenceTagger(Model):
     def __init__(self, vocab, text_field_embedder, hidden_size=128, num_layers=2, dropout=0.5,
                  tag_namespace='tags', initializer=None, metric=None):
@@ -103,6 +103,7 @@ class BiLSTMCRFSequenceTagger(Model):
         tag_namespace = params.pop('tag_namespace', 'tags')
         initializer = Initializer.from_params(params.pop('initializer', Params({})))
         metric = Metric.from_params(params.pop('metric', Params({})), vocab=vocab)
+        params.assert_empty(cls.__name__)
         return cls(vocab, text_field_embedder, hidden_size=hidden_size, num_layers=num_layers,
                    dropout=dropout, tag_namespace=tag_namespace, initializer=initializer,
                    metric=metric)
