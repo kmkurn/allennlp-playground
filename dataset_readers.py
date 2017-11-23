@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @DatasetReader.register('conll_two_columns')
 class CoNLLTwoColumnsDatasetReader(DatasetReader):
     def __init__(self, token_indexers=None, sentence_field_name='sentence',
-                 tags_field_name='tags', tags_namespace='tags'):
+                 tags_field_name='tags', tag_namespace='tags'):
         if token_indexers is None:
             token_indexers = {
                 'words': SingleIdTokenIndexer(namespace='tokens'),
@@ -25,7 +25,7 @@ class CoNLLTwoColumnsDatasetReader(DatasetReader):
         self.token_indexers = token_indexers
         self.sentence_field_name = sentence_field_name
         self.tags_field_name = tags_field_name
-        self.tags_namespace = tags_namespace
+        self.tag_namespace = tag_namespace
 
     def read(self, file_path):
         logger.info('Reading instances from file %s', file_path)
@@ -42,7 +42,7 @@ class CoNLLTwoColumnsDatasetReader(DatasetReader):
         fields = {self.sentence_field_name: sent_field}
         if tags is not None:
             fields[self.tags_field_name] = SequenceLabelField(
-                tags, sent_field, label_namespace=self.tags_namespace)
+                tags, sent_field, label_namespace=self.tag_namespace)
         return Instance(fields)
 
     @classmethod
@@ -51,7 +51,7 @@ class CoNLLTwoColumnsDatasetReader(DatasetReader):
         token_indexers = TokenIndexer.dict_from_params(token_indexers_params)
         sentence_field_name = params.pop('sentence_field_name', 'sentence')
         tags_field_name = params.pop('tags_field_name', 'tags')
-        tags_namespace = params.pop('tags_namespace', 'tags')
+        tag_namespace = params.pop('tag_namespace', 'tags')
         params.assert_empty(cls.__name__)
         return cls(token_indexers=token_indexers, sentence_field_name=sentence_field_name,
-                   tags_field_name=tags_field_name, tags_namespace=tags_namespace)
+                   tags_field_name=tags_field_name, tag_namespace=tag_namespace)
